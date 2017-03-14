@@ -11,7 +11,7 @@ var autoRover = {
 };
 
 var autoRoverOn = false;
-
+var bounds = false;
 var myMap = [];
 
 function goForward(rover) {
@@ -83,11 +83,11 @@ function turnRight(rover){
 }
 
 //Move a rover with options
-function moveRover(moveOP, rover) {
-  preY = rover.position[0];
-  preX = rover.position[1];
-  console.log("moveRover "+ moveOP);
-  switch (moveOP) {
+function moveRover(moveOption, rover) {
+  preCoordY = rover.position[0];
+  preCoordX = rover.position[1];
+
+  switch (moveOption) {
     case "F":
       goForward(rover);
       break;
@@ -103,16 +103,21 @@ function moveRover(moveOP, rover) {
     default:
   }
 
-  if (moveOP=="F" || moveOP=="B") {
+  if (moveOption==="F" || moveOption==="B") {
+    checkWarpBounds(rover);
     if (!validMovement(rover)) {
-      rover.position[1] = preX;
-      rover.position[0] = preY;
-      console.log("Illegal Movement!!!");
+      rover.position[1] = preCoordX;
+      rover.position[0] = preCoordY;
+      if (rover.name === "R") {
+        document.getElementById("msg").innerHTML= "Illegal Movement!!!";
+        console.log("Illegal Movement!!!");
+      }
     } else {
-      myMap[preY][preX] = "*";
-      if (rover.name == "R") {
+      myMap[preCoordY][preCoordX] = "*";
+      if (rover.name === "R") {
         myMap[rover.position[0]][rover.position[1]] = rover.direction;
         console.log("New Rover Position: [" + rover.position[0] + ", " + rover.position[1] + "] faced to " + rover.direction);
+        document.getElementById("msg").innerHTML = "New Rover Position: [" + rover.position[0] + ", " + rover.position[1] + "] faced to " + rover.direction;
       } else {
         myMap[rover.position[0]][rover.position[1]] = rover.direction.toLowerCase();
       }
@@ -127,20 +132,16 @@ function moveRover(moveOP, rover) {
 //Run commands wrote at text field
 function runCommands() {
   var commands = document.getElementById('commands').value.toUpperCase();
-  console.log(commands);
-
   var i = 0;
   var id = setInterval(move, 250);
   function move() {
     if (i < commands.length) {
-      console.log(commands[i]);
       moveRover(commands[i], myRover);
       i++;
     } else {
       clearInterval(id);
     }
   }
-  console.log("fin");
 }
 
 // Push a rover at ramdom position and direction
@@ -149,7 +150,7 @@ function landing(rover) {
   while (!placed) {
     rover.position[0] = Math.floor(Math.random() * 10);
     rover.position[1] = Math.floor(Math.random() * 10);
-    if (myMap[rover.position[0]][rover.position[1]] == "*") {
+    if (myMap[rover.position[0]][rover.position[1]] === "*") {
       placed = true;
     }
   }
@@ -159,51 +160,57 @@ function landing(rover) {
 }
 
 //Move the Rover with cursors
-function GetChar (event){
+function getKeyChar (event){
   var chCode = ('charCode' in event) ? event.charCode : event.keyCode;
-  var moveOp;
-  //alert ("The Unicode character code is: " + chCode);
-  //alert ("Opcion: " + event.keyCode + " " + String.fromCharCode(chCode));
-  //moveOp = String.fromCharCode(chCode);
+  var userMove;
+  //alert ("keyCode: " + event.keyCode + " Unicode charcode: " + chCode + " StringFrom charcode: "+ String.fromCharCode(chCode));
   switch (event.keyCode) {
-    case 38: //up
-      moveOp="F";
+    case 38: //up     keycode(70)=F
+      userMove="F";
       break;
-    case 40: //down
-      moveOp="B";
+    case 40: //down   keycode(66)=B
+      userMove="B";
       break;
-    case 39: //right
-      moveOp="R";
+    case 39: //right  keycode(82)=R
+      userMove="R";
       break;
-    case 37: //left
-      moveOp="L";
+    case 37: //left   keycode(77)=L
+      userMove="L";
       break;
     default:
-      moveOp = String.fromCharCode(chCode).toUpperCase();
+      userMove = String.fromCharCode(chCode).toUpperCase();
       break;
   }
-  //console.log("charcode: " + String.fromCharCode(chCode) + "keycode" + event.keyCode)
-  moveRover(moveOp, myRover);
+  moveRover(userMove, myRover);
 }
 
-//Illegal movement
-function validMovement (rover) {
-  x= rover.position[1];
-  y= rover.position[0];
-
-  if ( ((x>=0) && (x<10)) && ((y>=0) && (y < 10))) {
-    if (myMap[y][x] == "*") {
-      return true;
-    } else {
-      return false;
+//Warp movement at bounds
+function checkWarpBounds(rover) {
+  x = rover.position[1];
+  y = rover.position[0];
+  if (!bounds) {
+    if (x<0) {
+      rover.position[1] = 9;
+    } else if (x>9) {
+      rover.position[1] = 0;
+    } else if (y<0) {
+      rover.position[0] = 9;
+    } else if (y>9) {
+      rover.position[0] = 0;
     }
-  } else {
-    return false;
   }
 }
 
-// On-Off a random movement rover
+/* Validate a movement */
+function validMovement (rover) {
+  x = rover.position[1];
+  y = rover.position[0];
+  return ( (((x>=0) && (x<10)) && ((y>=0) && (y<10))) && (myMap[y][x] === "*") ) ? true : false;
+}
+
+/* On-Off a random movement rover */
 function switchAutoRover() {
+
   if (autoRoverOn) {
     myMap[autoRover.position[0]][autoRover.position[1]] = "*";
     autoRoverOn = false;
@@ -212,6 +219,7 @@ function switchAutoRover() {
     autoRoverOn = true;
     var id = setInterval(move, 250);
   }
+
   function move () {
     if (autoRoverOn) {
       moveRover("FBRL"[Math.floor(Math.random() * 4)], autoRover);
@@ -219,19 +227,9 @@ function switchAutoRover() {
       clearInterval(id);
     }
   }
-  //var id = setInterval(move, 100);
-  /*function move() {
-    if (i < commands.length) {
-      console.log(commands[i]);
-      moveRover(commands[i], myRover);
-      i++;
-    } else {
-      clearInterval(id);
-    }
-  }*/
 }
 
-//Init a empty map and place some obstacles
+/* Init a empty map and place some obstacles */
 function initMap (myMap){
   for (i=0; i<10; i++) {
     myMap[i] = [];
@@ -247,7 +245,7 @@ function initMap (myMap){
     while (!placed) {
       x = Math.floor(Math.random() * 10);
       y = Math.floor(Math.random() * 10);
-      if (myMap[y][x] == "*") {
+      if (myMap[y][x] === "*") {
         myMap[y][x] = "X";
         console.log("obstacles"+i+": " + x + ","+ y);
         placed = true;
@@ -258,51 +256,34 @@ function initMap (myMap){
 
 //Draw map at console and browser
 function printMap(map) {
-  var sMap="";
-  //CONSOLE
-  /*
-  for (i = 0; i < 10; i++) {
-    for (j = 0; j < 10; j++) {
-      sMap += map[i][j];
-    }
-    sMap += "\n";
-  }
-  console.log(sMap);
-  */
-  //BROWSER
+  var consoleMap="";
   document.getElementById('surface').innerHTML = "";
   for (i = 0; i < 10; i++) {
     for (j = 0; j < 10; j++) {
-      if (myRover.position[0] == i && myRover.position[1] == j) {
+      if (myRover.position[0] === i && myRover.position[1] === j) {
         map[i][j] = myRover.direction;
-        sMap += myRover.direction;
-        document.getElementById('surface').style.display = 'none';
-        document.getElementById('surface').innerHTML += '<img id="R" src="" alt=""/>';
-        document.getElementById("R").src = "images/R" + myRover.direction + ".png";
-        document.getElementById("R").style.top = "" + (myRover.position[0] * 50) + "px";
-        document.getElementById("R").style.left = "" + (myRover.position[1] * 50) + "px";
-        document.getElementById('surface').style.display = 'block';
-        console.log (myRover.position[0]+", "+myRover.position[1]);
-      } else if ((autoRover.position[0] == i && autoRover.position[1] == j) && autoRoverOn) {
+        document.getElementById('surface').innerHTML += "<img id='"+myRover.name+"' src='images/" + myRover.name + myRover.direction + ".png' style='top: "+ (myRover.position[0] * 50) + "px ;left: "+(myRover.position[1] * 50)+ "px;'/>";
+      } else if ((autoRover.position[0] === i && autoRover.position[1] === j) && autoRoverOn) {
         map[i][j] = autoRover.direction.toLowerCase();
-        sMap += autoRover.direction.toLowerCase();
-        document.getElementById('surface').style.display = 'none';
-        document.getElementById('surface').innerHTML += '<img id="AI" src="" alt=""/>';
-        document.getElementById("AI").src = "images/AI" + autoRover.direction + ".png";
-        document.getElementById("AI").style.top = "" + (autoRover.position[0] * 50) + "px";
-        document.getElementById("AI").style.left = "" + (autoRover.position[1] * 50) + "px";
-        document.getElementById('surface').style.display = 'block';
-      } else if (map[i][j]=="X") {
+        document.getElementById('surface').innerHTML += "<img id='"+autoRover.name+"' src='images/" + autoRover.name + autoRover.direction + ".png' style='top: "+ (autoRover.position[0] * 50) + "px ;left: "+(autoRover.position[1] * 50)+ "px;'/>";
+      } else if (map[i][j] === "X") {
         document.getElementById('surface').innerHTML += "<img class='obstacle' style='top: "+ (i*50) +"px; left: "+ (j*50) +"px;' src='images/stone.png' alt=''/>";
-        sMap += map[i][j];
-      } else {
-        sMap += map[i][j];
       }
-      //console.log(i,j, map[i,j]);
+      consoleMap += map[i][j];
     }
-    sMap += "\n";
+    consoleMap += "\n";
   }
-  console.log(sMap);
-  //document.getElementById('map').innerHTML = '<pre>'+sMap+'</pre>';
-  document.getElementById('surface').innerHTML += '<div id="map"><pre>'+sMap+'</pre></div>';
+  console.log(consoleMap);
+  document.getElementById('surface').innerHTML += '<div id="map"><pre>'+consoleMap+'</pre></div>';
+}
+
+/*Switch On-Off Bounds on Click*/
+function switchBounds() {
+  if (bounds) {
+    bounds = false;
+    document.getElementById('switchBounds').style.backgroundColor = "red";
+  } else {
+    bounds = true;
+    document.getElementById('switchBounds').style.backgroundColor = "green";
+  }
 }

@@ -47,7 +47,7 @@ body {
 
 button, input {
   color: #333;
-  background-color: rgb(255,205, 42);
+  background-color: rgb(255,205,42);
   font-family: Glass TTY VT220, monospace;
   text-shadow: 0 0 5px rgba(184,145,20,0.5);
   font-size: large;
@@ -70,4 +70,12 @@ pre {
 #map {
   float: left;
   position: relative;
+}
+
+#msg {
+  color: red;
+}
+
+#switchBounds {
+  background-color: red;
 }
