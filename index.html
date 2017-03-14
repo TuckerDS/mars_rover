@@ -2,8 +2,36 @@
 <head>
 	<title>Mars Rover Kata!</title>
 	<script type="text/javascript" src="rover.js"></script>
+	<link rel="stylesheet" type="text/css" href="style.css">
+	<meta charset="utf-8"/>
 </head>
-<body>
-
+<body onkeydown="GetChar (event);">
+<!-- onkeypress="GetChar (event);" -->
+	<h1>Mars Rover</h1>
+	<div id="content">
+	<div id="info">
+	<strong>INSTRUCTIONS: </strong>
+	<ul>
+		<li><strong>Landing:</strong> Press button to deploy your rover at random position and direction."</li>
+		<li><strong>AutoRover:</strong> Press button to deploy your rover at random position and direction and a second rover with random movements."</li>
+		<li><strong>Move:</strong> Use cursors to move, turn left, turn right, go forward and go backward."</li>
+		<li><strong>Run Commands:</strong> Write your movements commands and press button to run.</li>
+		<li><strong>Commands:</strong> Example commands: <em>FFLFFRBRL</em>
+		<br>"F" Forward
+		<br>"B" Backward
+		<br>"R" Turn right
+		<br>"L"	Turn left</li>
+	</ul>
+	</div>
+	<div id="game">
+		<div id="commandControl">
+			<button type="button" id="landing" onclick="landing(myRover);">Landing</button>
+			<button type="button" id="autoRoverSwitch" onclick="switchAutoRover();">AutoRover</button>
+			<br>
+			<input type="text" id="commands">
+			<button type="button" id="run" onclick="runCommands();">Run Commands</button>
+		</div>
+		<div id="surface"></div>
+	</div>
 </body>
 </html>
